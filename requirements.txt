@@ -1,0 +1,4 @@
+Flask==2.3.3
+Pillow==10.3.0
+requests==2.31.0
+cloudinary==1.38.0

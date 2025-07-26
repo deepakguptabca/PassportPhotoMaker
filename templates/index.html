@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Passport Photo Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+
+    .drop-zone {
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      padding: 2rem;
+      cursor: pointer;
+      background: #fff;
+      margin: 1rem auto;
+      max-width: 400px;
+    }
+
+    .drop-zone.dragover {
+      background: #e3f2fd;
+    }
+
+    #preview {
+      max-width: 300px;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      padding: 4px;
+      background: #fff;
+    }
+
+    #loading {
+      display: none;
+      font-weight: bold;
+      margin-top: 1rem;
+      color: #007bff;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+    }
+
+    button:disabled {
+      background: #ccc;
+    }
+
+    .input-group {
+      margin-top: 1rem;
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
+      font-size: 16px;
+    }
+
+
+    .advanced {
+  display: none;
+  margin-top: 1rem;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+  </style>
+</head>
+<body>
+
+  <h1>Passport Photo Generator</h1>
+
+  <div class="drop-zone" id="dropZone">
+    Drag & Drop Image Here or Click to Upload
+    <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;" />
+  </div>
+
+  <img id="preview" src="" alt="Image preview" />
+
+  <div class="input-group">
+    <label for="copies">Copies:</label>
+    <input type="number" id="copies" value="6" min="1" max="20" />
+  </div>
+
+  <button type="button" id="toggleAdvanced">Show Advanced Options</button>
+
+<div class="advanced" id="advancedOptions">
+  <div class="input-group">
+    <label for="width">Width (px):</label>
+    <input type="number" id="width" value="580" />
+    <label for="height">Height (px):</label>
+    <input type="number" id="height" value="580" />
+  </div>
+</div>
+
+
+  <div id="loading">Processing image... please wait</div>
+
+  <button id="downloadBtn" style="display: none;">Download Passport Sheet</button>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const loading = document.getElementById('loading');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copiesInput = document.getElementById('copies');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+
+
+    const toggleBtn = document.getElementById('toggleAdvanced');
+const advancedDiv = document.getElementById('advancedOptions');
+
+toggleBtn.addEventListener('click', () => {
+  if (advancedDiv.style.display === 'none') {
+    advancedDiv.style.display = 'block';
+    toggleBtn.textContent = 'Hide Advanced Options';
+  } else {
+    advancedDiv.style.display = 'none';
+    toggleBtn.textContent = 'Show Advanced Options';
+  }
+});
+
+
+    dropZone.addEventListener('click', () => imageInput.click());
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      preview.src = URL.createObjectURL(file);
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('copies', copiesInput.value);
+      formData.append('width', widthInput.value);
+      formData.append('height', heightInput.value);
+
+      loading.style.display = 'block';
+      downloadBtn.style.display = 'none';
+
+      fetch('/process', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (!response.ok) throw new Error("Processing failed");
+          return response.blob();
+        })
+        .then(blob => {
+          loading.style.display = 'none';
+          const url = URL.createObjectURL(blob);
+          preview.src = url;
+          downloadBtn.style.display = 'inline-block';
+          downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'passport-sheet.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+        })
+        .catch(() => {
+          loading.style.display = 'none';
+          alert("Image processing failed.");
+        });
+    }
+  </script>
+</body>
+</html>
