@@ -30,9 +30,9 @@ def process():
     file = request.files['image']
     input_image = file.read()
 
-    copies = int(request.form.get("copies", 4))
-    passport_width = int(request.form.get("width", 580))
-    passport_height = int(request.form.get("height", 580))
+    copies = int(request.form.get("copies", 6))
+    passport_width = int(request.form.get("width", 400))
+    passport_height = int(request.form.get("height", 400))
 
     # Step 1: Background Removal
     response = requests.post(
@@ -78,11 +78,11 @@ def process():
     a4_w, a4_h = 2480, 3508
     a4 = Image.new("RGB", (a4_w, a4_h), "white")
 
-    margin = 60
-    spacing = 40
+    margin = 0
+    spacing = 0
     x, y = margin, margin
-    paste_w = passport_width + 20
-    paste_h = passport_height + 20
+    paste_w = passport_width + 10
+    paste_h = passport_height + 10
 
     for _ in range(copies):
         if x + paste_w > a4_w:
