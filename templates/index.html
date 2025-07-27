@@ -51,6 +51,9 @@
       background: #007bff;
       color: white;
     }
+    .advance {
+      background: #71b1fcab;
+    }
 
     button:disabled {
       background: #ccc;
@@ -66,16 +69,14 @@
       font-size: 16px;
     }
 
-
     .advanced {
-  display: none;
-  margin-top: 1rem;
-  border: 1px solid #ccc;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 6px;
-}
-
+      display: none;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -94,23 +95,31 @@
     <input type="number" id="copies" value="6" min="1" max="54" />
   </div>
 
-  <button type="button" id="toggleAdvanced">Show Advanced Options</button>
+  <button type="button"class="advance" id="toggleAdvanced">Show Advanced Options</button>
 
-<div class="advanced" id="advancedOptions">
-  <div class="input-group">
-    <label for="width">Width (px):</label>
-    <input type="number" id="width" value="400" />
-    <label for="height">Height (px):</label>
-    <input type="number" id="height" value="400" />
+  <div class="advanced" id="advancedOptions">
+    <div class="input-group">
+      <label for="width">Width (px):</label>
+      <input type="number" id="width" value="400" />
+      <label for="height">Height (px):</label>
+      <input type="number" id="height" value="400" />
+      <label for="spacing">Spacing (px):</label>
+      <input type="number" id="spacing" value="50" />
+      <label for="border">Border size (px):</label>
+<input type="number" id="border" name="border" value="5" />
+
+    </div>
   </div>
-</div>
 
+  <button type="button" id="generateBtn">Generate Passport Sheet</button>
 
   <div id="loading">Processing image... please wait</div>
 
   <button id="downloadBtn" style="display: none;">Download Passport Sheet</button>
 
   <script>
+    let selectedFile = null;
+
     const dropZone = document.getElementById('dropZone');
     const imageInput = document.getElementById('imageInput');
     const preview = document.getElementById('preview');
@@ -119,21 +128,21 @@
     const copiesInput = document.getElementById('copies');
     const widthInput = document.getElementById('width');
     const heightInput = document.getElementById('height');
-
-
+    const spacingInput = document.getElementById('spacing');
+    const generateBtn = document.getElementById('generateBtn');
     const toggleBtn = document.getElementById('toggleAdvanced');
-const advancedDiv = document.getElementById('advancedOptions');
+    const advancedDiv = document.getElementById('advancedOptions');
+    const borderInput = document.getElementById('border');
 
-toggleBtn.addEventListener('click', () => {
-  if (advancedDiv.style.display === 'none') {
-    advancedDiv.style.display = 'block';
-    toggleBtn.textContent = 'Hide Advanced Options';
-  } else {
-    advancedDiv.style.display = 'none';
-    toggleBtn.textContent = 'Show Advanced Options';
-  }
-});
-
+    toggleBtn.addEventListener('click', () => {
+      if (advancedDiv.style.display === 'none') {
+        advancedDiv.style.display = 'block';
+        toggleBtn.textContent = 'Hide Advanced Options';
+      } else {
+        advancedDiv.style.display = 'none';
+        toggleBtn.textContent = 'Show Advanced Options';
+      }
+    });
 
     dropZone.addEventListener('click', () => imageInput.click());
     dropZone.addEventListener('dragover', e => {
@@ -149,18 +158,31 @@ toggleBtn.addEventListener('click', () => {
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     });
+
     imageInput.addEventListener('change', () => {
       const file = imageInput.files[0];
       if (file) handleFile(file);
     });
 
     function handleFile(file) {
+      selectedFile = file;
       preview.src = URL.createObjectURL(file);
+    }
+
+    generateBtn.addEventListener('click', () => {
+      if (!selectedFile) {
+        alert("Please upload an image first.");
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', selectedFile);
       formData.append('copies', copiesInput.value);
       formData.append('width', widthInput.value);
       formData.append('height', heightInput.value);
+      formData.append('spacing', spacingInput.value);
+      formData.append('border', borderInput.value);
+
 
       loading.style.display = 'block';
       downloadBtn.style.display = 'none';
@@ -191,7 +213,7 @@ toggleBtn.addEventListener('click', () => {
           loading.style.display = 'none';
           alert("Image processing failed.");
         });
-    }
+    });
   </script>
 </body>
 </html>

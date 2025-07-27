@@ -9,7 +9,7 @@ import os
 app = Flask(__name__)
 
 # Load API keys from environment variables or fallback values
-REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY", "oB5pmAKUyHyzEPEjngTV95Q9")
+REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY", "V1zPsUPoWSEis2Jmn2ij2jkM")
 
 # Cloudinary configuration
 cloudinary.config(
@@ -71,15 +71,19 @@ def process():
     else:
         passport_img = img.convert("RGB")
 
+    border = int(request.form.get("border", 5))  # default to 10 if not provided
+
+
     passport_img = passport_img.resize((passport_width, passport_height))
-    passport_img = ImageOps.expand(passport_img, border=10, fill='black')
+    passport_img = ImageOps.expand(passport_img, border=border, fill='black')
 
     # Step 5: Create A4 sheet
     a4_w, a4_h = 2480, 3508
     a4 = Image.new("RGB", (a4_w, a4_h), "white")
 
     margin = 0
-    spacing = 0
+    spacing = int(request.form.get("spacing", 50))
+
     x, y = margin, margin
     paste_w = passport_width + 10
     paste_h = passport_height + 10
