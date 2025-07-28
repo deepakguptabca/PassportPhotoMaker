@@ -74,7 +74,7 @@ def process():
     border = int(request.form.get("border", 5))  # default to 10 if not provided
 
 
-    passport_img = passport_img.resize((passport_width, passport_height))
+    passport_img = passport_img.resize((passport_width, passport_height), Image.LANCZOS)
     passport_img = ImageOps.expand(passport_img, border=border, fill='black')
 
     # Step 5: Create A4 sheet
