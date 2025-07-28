@@ -98,10 +98,10 @@ def process():
         x += paste_w + spacing
 
     output = BytesIO()
-    a4.save(output, format="JPEG")
+    a4.save(output, format="PNG")
     output.seek(0)
 
-    return send_file(output, mimetype="image/jpeg", as_attachment=True, download_name="passport-sheet.jpg")
+    return send_file(output, mimetype="image/PNG", as_attachment=True, download_name="passport-sheet.PNG")
 
 if __name__ == '__main__':
     app.run(debug=True)
