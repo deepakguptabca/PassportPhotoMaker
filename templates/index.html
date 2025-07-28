@@ -196,19 +196,24 @@
           return response.blob();
         })
         .then(blob => {
-          loading.style.display = 'none';
-          const url = URL.createObjectURL(blob);
-          preview.src = url;
-          downloadBtn.style.display = 'inline-block';
-          downloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'passport-sheet.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          };
-        })
+  loading.style.display = 'none';
+
+  const url = URL.createObjectURL(blob);
+  preview.src = url;
+
+  // Show download button
+  downloadBtn.style.display = 'inline-block';
+
+  // Link download button to image
+  downloadBtn.onclick = () => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'passport-sheet.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+})
         .catch(() => {
           loading.style.display = 'none';
           alert("Image processing failed.");
