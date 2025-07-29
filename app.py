@@ -81,7 +81,7 @@ def process():
     payload = {
         "data": [
             base64_img,
-            "v1.3",
+            "v1.4",
             2.0
         ]
     }
