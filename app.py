@@ -5,12 +5,12 @@ import requests
 import cloudinary
 import cloudinary.uploader
 import os
+import base64
 
 app = Flask(__name__)
 
-# API keys
+# Cloudinary and remove.bg API setup
 REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY", "dSKbkJd9Be1o2wAsj38G6aX7")
-
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "dcajb02df"),
     api_key=os.getenv("CLOUDINARY_API_KEY", "862192414383365"),
@@ -29,7 +29,7 @@ def process():
     file = request.files['image']
     input_image = file.read()
 
-       # 📌 Fixed layout values based on DFD.pdf
+    # === Layout parameters based on DFD ===
     passport_width = 384
     passport_height = 472
     border = 2
@@ -37,55 +37,77 @@ def process():
     margin_x = 50
     margin_y = 50
     horizontal_gap = 10
-    a4_w, a4_h = 2480, 3508  # A4 @ 300 DPI
-
+    a4_w, a4_h = 2480, 3508
     copies = int(request.form.get("copies", 1))
 
-    # =====================================================
-    # OPTIONAL: Background Removal (Uncomment to enable)
-    # =====================================================
-    # response = requests.post(
-    #     'https://api.remove.bg/v1.0/removebg',
-    #     files={'image_file': input_image},
-    #     data={'size': 'auto'},
-    #     headers={'X-Api-Key': REMOVE_BG_API_KEY}
-    # )
-    # if response.status_code != 200:
-    #     return f"Background removal failed: {response.text}", 500
-    # bg_removed = BytesIO(response.content)
+    # === Step 1: Background Removal ===
+    response = requests.post(
+        'https://api.remove.bg/v1.0/removebg',
+        files={'image_file': input_image},
+        data={'size': 'auto'},
+        headers={'X-Api-Key': REMOVE_BG_API_KEY}
+    )
+    if response.status_code != 200:
+        return f"Background removal failed: {response.text}", 500
 
-    # TEMP: Skip background removal for testing
-    print("Skipping background removal (using original image)")
-    bg_removed = BytesIO(input_image)
+    # === Step 2: Convert transparent bg to white ===
+    bg_removed = BytesIO(response.content)
+    img = Image.open(bg_removed)
 
-    # Upload to Cloudinary
-    bg_removed.seek(0)
-    upload_result = cloudinary.uploader.upload(bg_removed, resource_type="image")
+    if img.mode in ("RGBA", "LA"):
+        background = Image.new("RGB", img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[-1])
+        processed_img = background
+    else:
+        processed_img = img.convert("RGB")
+
+    # === Step 3: Upload to Cloudinary ===
+    buffer = BytesIO()
+    processed_img.save(buffer, format="PNG")
+    buffer.seek(0)
+    upload_result = cloudinary.uploader.upload(buffer, resource_type="image")
     image_url = upload_result.get("secure_url")
     if not image_url:
         return "Cloudinary upload failed", 500
 
-    # Cloudinary resize + enhancement
-    transformed_url = image_url.replace(
-        "/upload/",
-        f"/upload/c_fill,g_face,w_{passport_width},h_{passport_height},e_improve,e_sharpen/"
-    )
-    img_data = requests.get(transformed_url).content
+    # === Step 4: Send to Hugging Face Enhancer ===
+    cloud_img_data = requests.get(image_url).content
+    img = Image.open(BytesIO(cloud_img_data))
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    base64_img = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+    hf_api = "https://nightfury-image-face-upscale-restoration-gfpgan.hf.space/api/predict"
+    payload = {
+        "data": [
+            base64_img,
+            "v1.3",
+            2.0
+        ]
+    }
+
+    response = requests.post(hf_api, json=payload)
+    if response.status_code != 200:
+        return f"Upscaler API failed: {response.text}", 500
+
+    result = response.json()
+    output_base64 = result["data"][0].split(",")[1]
+    img_data = base64.b64decode(output_base64)
     img = Image.open(BytesIO(img_data))
 
-    # Convert to RGB if needed
+    # === Step 5: Ensure RGB (white background) ===
     if img.mode in ("RGBA", "LA"):
         background = Image.new("RGB", img.size, (255, 255, 255))
-        background.paste(img, mask=img.split()[3])
+        background.paste(img, mask=img.split()[-1])
         passport_img = background
     else:
         passport_img = img.convert("RGB")
 
-    # Resize and add border
+    # === Step 6: Resize & Add Border ===
     passport_img = passport_img.resize((passport_width, passport_height), Image.LANCZOS)
     passport_img = ImageOps.expand(passport_img, border=border, fill='black')
 
-    # Create A4 sheet
+    # === Step 7: Layout on A4 ===
     a4 = Image.new("RGB", (a4_w, a4_h), "white")
     x, y = margin_x, margin_y
     paste_w = passport_width + 2 * border
@@ -102,7 +124,7 @@ def process():
         x += paste_w + horizontal_gap
         placed += 1
 
-    # Save as PDF with 300 DPI (exact match to DFD)
+    # === Step 8: Export as PDF ===
     output = BytesIO()
     a4.save(output, format="PDF", dpi=(300, 300))
     output.seek(0)
