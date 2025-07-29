@@ -118,109 +118,102 @@
   <button id="downloadBtn" style="display: none;">Download Passport Sheet</button>
 
   <script>
- <!-- Inside <script> -->
-<script>
-  let selectedFile = null;
+    let selectedFile = null;
 
-  const dropZone = document.getElementById('dropZone');
-  const imageInput = document.getElementById('imageInput');
-  const preview = document.getElementById('preview');
-  const loading = document.getElementById('loading');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const copiesInput = document.getElementById('copies');
-  const widthInput = document.getElementById('width');
-  const heightInput = document.getElementById('height');
-  const spacingInput = document.getElementById('spacing');
-  const generateBtn = document.getElementById('generateBtn');
-  const toggleBtn = document.getElementById('toggleAdvanced');
-  const advancedDiv = document.getElementById('advancedOptions');
-  const borderInput = document.getElementById('border');
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const loading = document.getElementById('loading');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copiesInput = document.getElementById('copies');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const spacingInput = document.getElementById('spacing');
+    const generateBtn = document.getElementById('generateBtn');
+    const toggleBtn = document.getElementById('toggleAdvanced');
+    const advancedDiv = document.getElementById('advancedOptions');
+    const borderInput = document.getElementById('border');
 
-  toggleBtn.addEventListener('click', () => {
-    if (advancedDiv.style.display === 'none') {
-      advancedDiv.style.display = 'block';
-      toggleBtn.textContent = 'Hide Advanced Options';
-    } else {
-      advancedDiv.style.display = 'none';
-      toggleBtn.textContent = 'Show Advanced Options';
-    }
-  });
-
-  dropZone.addEventListener('click', () => imageInput.click());
-  dropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-  });
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('dragover');
-  });
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  });
-
-  imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
-    if (file) handleFile(file);
-  });
-
-  function handleFile(file) {
-    selectedFile = file;
-    preview.src = URL.createObjectURL(file);
-  }
-
-  generateBtn.addEventListener('click', () => {
-    if (!selectedFile) {
-      alert("Please upload an image first.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('image', selectedFile);
-    formData.append('copies', copiesInput.value);
-    formData.append('width', widthInput.value);
-    formData.append('height', heightInput.value);
-    formData.append('spacing', spacingInput.value);
-    formData.append('border', borderInput.value);
-
-    loading.style.display = 'block';
-    downloadBtn.style.display = 'none';
-
-    fetch('/process', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) throw new Error("Processing failed");
-      return response.blob();
-    })
-    .then(blob => {
-      loading.style.display = 'none';
-      const url = URL.createObjectURL(blob);
-      preview.src = url;
-      downloadBtn.style.display = 'inline-block';
-
-      // Preserve original file extension
-      const originalExt = selectedFile.name.split('.').pop().toLowerCase();
-      const baseName = selectedFile.name.replace(/\.[^/.]+$/, ""); // remove extension
-
-      downloadBtn.onclick = () => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${baseName}-passport-sheet.${originalExt}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      };
-    })
-    .catch(() => {
-      loading.style.display = 'none';
-      alert("Image processing failed.");
+    toggleBtn.addEventListener('click', () => {
+      if (advancedDiv.style.display === 'none') {
+        advancedDiv.style.display = 'block';
+        toggleBtn.textContent = 'Hide Advanced Options';
+      } else {
+        advancedDiv.style.display = 'none';
+        toggleBtn.textContent = 'Show Advanced Options';
+      }
     });
-  });
-</script>
 
+    dropZone.addEventListener('click', () => imageInput.click());
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      selectedFile = file;
+      preview.src = URL.createObjectURL(file);
+    }
+
+    generateBtn.addEventListener('click', () => {
+      if (!selectedFile) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('copies', copiesInput.value);
+      formData.append('width', widthInput.value);
+      formData.append('height', heightInput.value);
+      formData.append('spacing', spacingInput.value);
+      formData.append('border', borderInput.value);
+
+
+      loading.style.display = 'block';
+      downloadBtn.style.display = 'none';
+
+      fetch('/process', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (!response.ok) throw new Error("Processing failed");
+          return response.blob();
+        })
+        .then(blob => {
+          loading.style.display = 'none';
+          const url = URL.createObjectURL(blob);
+          preview.src = url;
+          downloadBtn.style.display = 'inline-block';
+          downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'passport-sheet.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+        })
+        .catch(() => {
+          loading.style.display = 'none';
+          alert("Image processing failed.");
+        });
+    });
+  </script>
 </body>
 </html>
