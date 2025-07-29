@@ -58,7 +58,7 @@ def process():
     # Step 3: Enhance via Cloudinary
     transformed_url = image_url.replace(
         "/upload/",
-        "/upload/c_fill,g_face,w_600,h_600,e_improve,e_sharpen/"
+        "/upload/c_fill,g_face,w_400,h_400,e_improve,e_sharpen/"
     )
 
     # Step 4: Download, prepare passport photo
