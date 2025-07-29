@@ -89,10 +89,11 @@
   </div>
 
   <img id="preview" src="" alt="Image preview" />
+  <embed id="pdfPreview" type="application/pdf" width="100%" height="600px" style="display: none;" />
 
   <div class="input-group">
     <label for="copies">Copies:</label>
-    <input type="number" id="copies" value="6" min="1" max="54" />
+    <input type="number" id="copies" value="1" min="1" max="54" />
   </div>
 
   <button type="button"class="advance" id="toggleAdvanced">Show Advanced Options</button>
@@ -196,19 +197,26 @@
           return response.blob();
         })
         .then(blob => {
-          loading.style.display = 'none';
-          const url = URL.createObjectURL(blob);
-          preview.src = url;
-          downloadBtn.style.display = 'inline-block';
-          downloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'passport-sheet.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          };
-        })
+  loading.style.display = 'none';
+  const url = URL.createObjectURL(blob);
+
+  // Show PDF preview
+  const pdfPreview = document.getElementById('pdfPreview');
+  pdfPreview.style.display = 'block';
+  pdfPreview.src = url;
+
+  // Setup download button
+  downloadBtn.style.display = 'inline-block';
+  downloadBtn.onclick = () => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'passport-sheet.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+})
+
         .catch(() => {
           loading.style.display = 'none';
           alert("Image processing failed.");
