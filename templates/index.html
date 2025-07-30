@@ -77,9 +77,29 @@
       background: #f9f9f9;
       border-radius: 6px;
     }
+
+    #loginBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #007bff;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#loginBtn:hover {
+  background: #0056b3;
+}
+
   </style>
 </head>
 <body>
+  <a href="/login" id="loginBtn">Premium</a>
+
 
   <h1>Passport Photo Generator</h1>
 
@@ -189,23 +209,30 @@
       downloadBtn.style.display = 'none';
 
       fetch('/process', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => {
-          if (!response.ok) throw new Error("Processing failed");
-          return response.blob();
-        })
-        .then(blob => {
+  method: 'POST',
+  body: formData
+})
+.then(async response => {
+  if (response.status === 429) {
+    const html = await response.text();
+    document.body.innerHTML = html; // Replace the page with rate-limit HTML
+    return;
+  }
+
+  if (!response.ok) throw new Error("Processing failed");
+
+  return response.blob();
+})
+.then(blob => {
+  if (!blob) return;
+
   loading.style.display = 'none';
   const url = URL.createObjectURL(blob);
 
-  // Show PDF preview
   const pdfPreview = document.getElementById('pdfPreview');
   pdfPreview.style.display = 'block';
   pdfPreview.src = url;
 
-  // Setup download button
   downloadBtn.style.display = 'inline-block';
   downloadBtn.onclick = () => {
     const link = document.createElement('a');
@@ -216,11 +243,11 @@
     document.body.removeChild(link);
   };
 })
+.catch(() => {
+  loading.style.display = 'none';
+  alert("Image processing failed.");
+});
 
-        .catch(() => {
-          loading.style.display = 'none';
-          alert("Image processing failed.");
-        });
     });
   </script>
 </body>

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_file,render_template_string,session
 from PIL import Image, ImageOps
 from io import BytesIO
 import requests
@@ -6,8 +6,131 @@ import cloudinary
 import cloudinary.uploader
 import os
 import base64
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_limiter.errors import RateLimitExceeded
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
+
+app.secret_key = 'secret_key'  
+
+# === Rate limiter setup ===
+limiter = Limiter(get_remote_address, app=app)
+
+#==exempt users with a secret code from rate limiting ===
+@limiter.request_filter
+def exempt_users_with_secret_code():
+    return session.get('exempt') == True
+
+
+#=== Secret key for session management ===
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        code = request.form.get('secret_code')
+        if code == "UNLIMITED_ACESS":
+            session['exempt'] = True
+            return "Exempted from rate limit!"
+        else:
+            session['exempt'] = False
+            return "Invalid code"
+    return   """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 200px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Premium Access</h2>
+        <form method="post">
+            <label>Enter Your Premium Code:</label><br>
+            <input type="text" name="secret_code" required><br>
+            <input type="submit" value="Login">
+        </form>
+    </div>
+</body>
+</html>
+"""
+
+#=== Error handler for rate limit exceeded ===
+
+@app.errorhandler(RateLimitExceeded)
+def handle_ratelimit(e):
+    retry_after = e.retry_after if e.retry_after is not None else 600
+    next_time = datetime.now() + timedelta(seconds=retry_after)
+    formatted_time = next_time.strftime("%I:%M:%S %p")  # e.g., "03:42:15 PM"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Rate Limit Exceeded</title>
+        <style>
+            body {{
+                font-family: sans-serif;
+                background: #fff3f3;
+                text-align: center;
+                padding: 2rem;
+                color: #d00000;
+            }}
+            h1 {{
+                font-size: 2rem;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>⚠️ Rate Limit Exceeded</h1>
+        <p>You’ve reached the limit. You can try again at <strong>{formatted_time}</strong>.</p>
+        <p>Contact us at <a href="tel:+919718958028"><strong>+91 97189 58028</strong></a> for unlimited access.</p>
+
+
+    </body>
+    </html>
+    """
+    return render_template_string(html), 429
+
 
 # Cloudinary and remove.bg API setup
 REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY", "dSKbkJd9Be1o2wAsj38G6aX7")
@@ -22,6 +145,8 @@ def index():
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
+@limiter.limit("1 per 10 minutes")
+@limiter.limit("5 per week")
 def process():
     if 'image' not in request.files:
         return "No image uploaded", 400
@@ -53,6 +178,7 @@ def process():
     # === Step 2: Convert transparent bg to white ===
     bg_removed = BytesIO(response.content)
     img = Image.open(bg_removed)
+    
 
     if img.mode in ("RGBA", "LA"):
         background = Image.new("RGB", img.size, (255, 255, 255))
