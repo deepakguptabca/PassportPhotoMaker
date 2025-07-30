@@ -10,6 +10,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_limiter.errors import RateLimitExceeded
 from datetime import datetime, timedelta
+import pytz
 
 app = Flask(__name__)
 
@@ -99,8 +100,9 @@ def login():
 @app.errorhandler(RateLimitExceeded)
 def handle_ratelimit(e):
     retry_after = e.retry_after if e.retry_after is not None else 600
-    next_time = datetime.now() + timedelta(seconds=retry_after)
-    formatted_time = next_time.strftime("%I:%M:%S %p")  # e.g., "03:42:15 PM"
+    india_tz = pytz.timezone('Asia/Kolkata')
+    next_time = datetime.now(india_tz) + timedelta(seconds=retry_after)
+    formatted_time = next_time.strftime("%I:%M:%S %p")  
 
     html = f"""
     <!DOCTYPE html>
