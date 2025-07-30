@@ -11,13 +11,17 @@ from flask_limiter.util import get_remote_address
 from flask_limiter.errors import RateLimitExceeded
 from datetime import datetime, timedelta
 import pytz
+import redis
 
 app = Flask(__name__)
 
-app.secret_key = 'secret_key'  
+app.secret_key = 'secret_key' 
+
+#  Redis URL from environment variable 
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # === Rate limiter setup ===
-limiter = Limiter(get_remote_address, app=app)
+limiter = Limiter(get_remote_address, app=app,storage_uri=redis_url,)
 
 #==exempt users with a secret code from rate limiting ===
 @limiter.request_filter
