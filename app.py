@@ -20,9 +20,6 @@ app.secret_key = 'secret_key'
 #  Redis URL from environment variable 
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
-
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-
 # === Rate limiter setup ===
 limiter = Limiter(get_remote_address, app=app,storage_uri=redis_url,)
 
