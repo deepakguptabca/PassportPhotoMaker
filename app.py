@@ -146,6 +146,36 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET", "TDuIQPd_iRf5_ThniMlwn8Gaaq8")
 )
 
+
+# EMAIL JS CONFIGURATION
+EMAILJS_API_URL = "https://api.emailjs.com/api/v1.0/email/send"
+
+Private_key="uMhgP19X7GB7kARSn6f9b"
+
+EMAILJS_SERVICE_ID = "service_aoewzsq"
+EMAILJS_TEMPLATE_ID = "template_mxlc2og"
+EMAILJS_PUBLIC_KEY = "XJqjmVHK4ISEX0Zam"
+
+def send_email():
+    data = {
+        "service_id": EMAILJS_SERVICE_ID,
+        "template_id": EMAILJS_TEMPLATE_ID,
+        "user_id": EMAILJS_PUBLIC_KEY,
+        
+    }
+
+
+    headers = {
+    "origin": "http://localhost",  # Any allowed origin
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {Private_key}"
+}
+    
+
+    response = requests.post(EMAILJS_API_URL, json=data,headers=headers)
+    print("Status:", response.status_code)
+    print("Response:", response.text)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -186,6 +216,7 @@ def process():
     print(f"DEBUG: remove.bg response status = {response.status_code}")
     if response.status_code != 200:
         print(f"ERROR: Background removal failed - {response.text}")
+        send_email()
         return f"Background removal failed: {response.text}", 500
 
     bg_removed = BytesIO(response.content)
