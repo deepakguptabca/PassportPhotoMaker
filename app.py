@@ -15,7 +15,10 @@ import redis
 
 app = Flask(__name__)
 
-app.secret_key = 'secret_key'  
+app.secret_key = 'secret_key' 
+
+#  Redis URL from environment variable 
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
