@@ -197,10 +197,10 @@ def process():
     passport_width = 384
     passport_height = 472
     border = 2
-    spacing = 40
-    margin_x = 30
-    margin_y = 30
-    horizontal_gap = 30
+    spacing = 25
+    margin_x = 10
+    margin_y = 15
+    horizontal_gap = 20
     a4_w, a4_h = 2480, 3508
     copies = int(request.form.get("copies", 1))
     print(f"DEBUG: Copies requested = {copies}")
