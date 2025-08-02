@@ -181,14 +181,15 @@ def index():
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
-@limiter.limit("25 per day")
+@limiter.limit("10 per day")
 def process():
     print("==== /process endpoint hit ====")
 
     if 'image' not in request.files:
         print("DEBUG: No image in request")
         return "No image uploaded", 400
-
+    client_ip = request.remote_addr
+    print(f"Client IP address: {client_ip}")
     file = request.files['image']
     print(f"DEBUG: Received image file: {file.filename}")
     input_image = file.read()

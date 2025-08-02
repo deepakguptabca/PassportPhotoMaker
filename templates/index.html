@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="https://res.cloudinary.com/dcajb02df/image/upload/v1753960691/logo_pyncju.png" type="image/png"> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PassPort Photo Gen</title>
+  <title>PassPort Photo Pro</title>
   <style>
     /* Use Inter font family */
     body {
@@ -35,7 +35,7 @@
   </style>
   
 </head>
-<body class="bg-gray-900 text-white">
+<body class="bg-gray-900 text-white" oncontextmenu="return false">
 
   <!-- Particle background container -->
   <div id="particles-js"></div>
@@ -48,9 +48,9 @@
           <span class="text-2xl font-bold text-blue-400">Passport Photo Pro</span>
         </div>
         <div class="flex items-center">
-          <a href="/login" id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105">
+        <!--<a href="/login" id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105">
             Premium
-          </a>
+          </a>-->
         </div>
       </div>
     </nav>
@@ -149,7 +149,7 @@
  
 
   <script>
-    console.log("Frontend By - NS")
+    
     // --- Initialize Libraries ---
     // IMPORTANT: Replace with your actual EmailJS public key
     emailjs.init("XJqjmVHK4ISEX0Zam"); 
@@ -294,7 +294,7 @@
         })
         .catch(error => {
           console.error("Error:", error);
-          showNotification("Image processing failed. Is the server running?");
+          showNotification("Image processing failed... Try again Later ");
         })
         .finally(() => {
           loading.classList.add('hidden');
