@@ -11,9 +11,12 @@ from flask_limiter.util import get_remote_address
 from flask_limiter.errors import RateLimitExceeded
 from datetime import datetime, timedelta
 import pytz
+from werkzeug.middleware.proxy_fix import ProxyFix
 import redis
 
 app = Flask(__name__)
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1) 
 
 app.secret_key = 'secret_key' 
 
@@ -178,6 +181,8 @@ def send_email():
 
 @app.route('/')
 def index():
+    client_ip = request.remote_addr
+    print(f"Client IP address: {client_ip}")
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
@@ -188,8 +193,8 @@ def process():
     if 'image' not in request.files:
         print("DEBUG: No image in request")
         return "No image uploaded", 400
-    client_ip = request.remote_addr
-    print(f"Client IP address: {client_ip}")
+    
+    
     file = request.files['image']
     print(f"DEBUG: Received image file: {file.filename}")
     input_image = file.read()
