@@ -279,7 +279,7 @@
       fetch('/process', { method: 'POST', body: formData })
         .then(async response => {
           if (response.status === 429) { // Rate limit handling
-            showNotification("Too many requests. Please try again later.");
+            showNotification("Server Daily Quota Exceeded. Please try again later.");
             return null;
           }
           if (!response.ok) throw new Error("Processing failed on the server.");

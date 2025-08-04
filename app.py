@@ -188,7 +188,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
-## @limiter.limit("10 per day")
+@limiter.limit("45 per day")
 def process():
     print("==== /process endpoint hit ====")
 
