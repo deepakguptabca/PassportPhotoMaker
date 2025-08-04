@@ -182,7 +182,9 @@ def send_email():
 @app.route('/')
 def index():
     client_ip = request.remote_addr
-    print(f"Client IP address: {client_ip}")
+    forwarded_for = request.headers.get('X-Forwarded-For', 'N/A')
+    print(f"Client IP (remote_addr): {client_ip}")
+    print(f"Client IP (X-Forwarded-For): {forwarded_for}")
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
