@@ -181,10 +181,7 @@ def send_email():
 
 @app.route('/')
 def index():
-    client_ip = request.remote_addr
-    forwarded_for = request.headers.get('X-Forwarded-For', 'N/A')
-    print(f"Client IP (remote_addr): {client_ip}")
-    print(f"Client IP (X-Forwarded-For): {forwarded_for}")
+    
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
@@ -192,6 +189,11 @@ def index():
 def process():
     print("==== /process endpoint hit ====")
 
+    client_ip = request.remote_addr
+    forwarded_for = request.headers.get('X-Forwarded-For', 'N/A')
+    print(f"Client IP (remote_addr): {client_ip}")
+    print(f"Client IP (X-Forwarded-For): {forwarded_for}")
+    
     if 'image' not in request.files:
         print("DEBUG: No image in request")
         return "No image uploaded", 400
